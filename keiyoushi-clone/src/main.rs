@@ -32,7 +32,7 @@ pub struct Source {
 const INDEX_FILE_PATH: &str = "index.json";
 
 const WANTED_PACKAGES: [&str; 1] = ["MangaDex"];
-const WANTED_LANGS: [&str; 1] = ["pt-BR"];
+const WANTED_LANGS: [&str; 2] = ["pt-BR", "en"];
 const KEIYOUSHI_SOURCE_URL: &str =
     "https://raw.githubusercontent.com/keiyoushi/extensions/refs/heads/repo/index.json";
 const KEIYOUSHI_SOURCE_BIN_URL: &str =
