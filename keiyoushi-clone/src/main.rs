@@ -1,7 +1,11 @@
-use std::str::FromStr;
+use std::{path::Path, str::FromStr};
 
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
+use tokio::{
+    fs::File,
+    io::{AsyncWriteExt, BufWriter},
+};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,6 +35,37 @@ const WANTED_PACKAGES: [&str; 1] = ["MangaDex"];
 const WANTED_LANGS: [&str; 1] = ["pt-BR"];
 const KEIYOUSHI_SOURCE_URL: &str =
     "https://raw.githubusercontent.com/keiyoushi/extensions/refs/heads/repo/index.json";
+const KEIYOUSHI_SOURCE_BIN_URL: &str =
+    "https://raw.githubusercontent.com/keiyoushi/extensions/refs/heads/repo/apk/";
+
+async fn download_bin(bin_path: &Url) -> Result<(), String> {
+    let file_name = bin_path
+        .path_segments()
+        .and_then(|segments| segments.last())
+        .ok_or("Invalid URL: no file name found")?;
+
+    let file_path = Path::new("apk").join(file_name);
+
+    let response = reqwest::get(bin_path.to_owned())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        return Err(format!("Failed to download file: {}", response.status()).into());
+    }
+    let mut file = BufWriter::new(File::create(&file_path).await.map_err(|e| e.to_string())?);
+
+    let mut stream = response.bytes_stream();
+
+    use futures_util::StreamExt;
+    while let Some(chunk) = stream.next().await {
+        let data = chunk.map_err(|e| e.to_string())?;
+        file.write_all(&data).await.map_err(|e| e.to_string())?;
+    }
+
+    file.flush().await.map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -69,9 +104,21 @@ async fn main() -> Result<(), String> {
         })
         .collect();
 
+    let keiyoushi_bin_base_url =
+        Url::from_str(KEIYOUSHI_SOURCE_BIN_URL).map_err(|e| e.to_string())?;
+
+    let apk_bins: Vec<Url> = packages
+        .iter()
+        .map(|package| keiyoushi_bin_base_url.join(&package.apk).unwrap())
+        .collect();
+
+    futures::future::join_all(apk_bins.iter().map(|url| download_bin(url))).await;
+
     let packages_str = serde_json::to_string(&packages).map_err(|e| e.to_string())?;
 
-    tokio::fs::write(INDEX_FILE_PATH.to_owned(), packages_str).await.map_err(|e| e.to_string())?;
+    tokio::fs::write(INDEX_FILE_PATH.to_owned(), packages_str)
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
