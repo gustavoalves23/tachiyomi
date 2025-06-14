@@ -25,7 +25,7 @@ pub struct Source {
     pub base_url: String,
 }
 
-const SOURCE_FILE_PATH: &str = "../index.json";
+const INDEX_FILE_PATH: &str = "index.json";
 
 const WANTED_PACKAGES: [&str; 1] = ["MangaDex"];
 const WANTED_LANGS: [&str; 1] = ["pt-BR"];
@@ -71,7 +71,7 @@ async fn main() -> Result<(), String> {
 
     let packages_str = serde_json::to_string(&packages).map_err(|e| e.to_string())?;
 
-    tokio::fs::write(SOURCE_FILE_PATH.to_owned(), packages_str).await.map_err(|e| e.to_string())?;
+    tokio::fs::write(INDEX_FILE_PATH.to_owned(), packages_str).await.map_err(|e| e.to_string())?;
 
     Ok(())
 }
