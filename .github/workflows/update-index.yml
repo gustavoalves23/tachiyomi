@@ -1,0 +1,37 @@
+name: Update Index Daily
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make binary executable
+        run: chmod +x bin/keiyoushi-clone
+
+      - name: Run keiyoushi-clone binary
+        run: ./bin/keiyoushi-clone
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add index.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update index.json from daily run"
+            git push
+          fi
+
