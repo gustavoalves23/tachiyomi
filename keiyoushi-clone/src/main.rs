@@ -127,6 +127,7 @@ async fn main() -> Result<(), String> {
         .filter(|pkg| WANTED_PACKAGES.iter().any(|name| pkg.name.contains(name)))
         .map(|pkg| {
             let mut pkg = pkg.clone();
+            pkg.nsfw = 0;
             pkg.sources.retain(|source| {
                 WANTED_LANGS.iter().any(|lang| lang == &source.lang)
                     && WANTED_PACKAGES.iter().any(|name| name == &source.name)
