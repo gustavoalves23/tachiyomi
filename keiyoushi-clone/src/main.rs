@@ -29,7 +29,7 @@ pub struct Source {
     pub base_url: String,
 }
 
-const INDEX_FILE_PATH: &str = "index.json";
+const INDEX_FILE_PATH: &str = "index.min.json";
 
 const WANTED_PACKAGES: [&str; 1] = ["MangaDex"];
 const WANTED_LANGS: [&str; 2] = ["pt-BR", "en"];
