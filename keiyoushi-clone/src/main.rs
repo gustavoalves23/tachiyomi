@@ -32,6 +32,8 @@ pub struct Source {
 const INDEX_FILE_PATH: &str = "index.min.json";
 
 const WANTED_PACKAGES: [&str; 2] = ["MangaDex", "Sagrado Império da Britannia"];
+const IGNORE_APK_DOWNLOAD_PACKAGES: [&str; 1] = ["MangaDex"];
+
 const WANTED_LANGS: [&str; 2] = ["pt-BR", "en"];
 const KEIYOUSHI_SOURCE_URL: &str =
     "https://raw.githubusercontent.com/keiyoushi/extensions/refs/heads/repo/index.json";
@@ -144,6 +146,7 @@ async fn main() -> Result<(), String> {
 
     let apk_bins: Vec<Url> = packages
         .iter()
+        .filter(|package| IGNORE_APK_DOWNLOAD_PACKAGES.iter().any(|pkg| package.name.contains(pkg)))
         .map(|package| keiyoushi_bin_base_url.join(&package.apk).unwrap())
         .collect();
 
